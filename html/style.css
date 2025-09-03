@@ -1,0 +1,390 @@
+/* RageUI Style Menu CSS */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
+  color: #f5f5f5;
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.menu-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.rageui-menu {
+  width: 431px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  animation: menuSlideIn 0.3s ease-out;
+}
+
+.submenu {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  animation: submenuSlideIn 0.2s ease-out;
+}
+
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes submenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Header */
+.menu-header {
+  height: 107px;
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.menu-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: headerShimmer 3s infinite;
+}
+
+@keyframes headerShimmer {
+  0%,
+  100% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+}
+
+.menu-title {
+  font-size: 1.15em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+  position: relative;
+}
+
+/* Subtitle */
+.menu-subtitle {
+  height: 37px;
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 0.35em;
+  font-weight: 500;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.subtitle-text {
+  font-size: 12px;
+}
+
+/* Color codes pour les textes RageUI */
+.subtitle-text:before {
+  content: "";
+}
+
+.subtitle-text[data-color="~b~"] {
+  color: #3498db;
+}
+.subtitle-text[data-color="~g~"] {
+  color: #2ecc71;
+}
+.subtitle-text[data-color="~r~"] {
+  color: #e74c3c;
+}
+.subtitle-text[data-color="~y~"] {
+  color: #f1c40f;
+}
+
+.page-counter {
+  font-size: 12px;
+  color: #bdc3c7;
+  font-weight: normal;
+}
+
+/* Menu Items */
+.menu-items {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8),
+    rgba(0, 0, 0, 0.9)
+  );
+}
+
+.menu-item {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  transition: all 0.15s ease;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.menu-item.active {
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  color: #000;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.menu-item.active .item-text,
+.menu-item.active .item-arrow,
+.menu-item.active .list-control,
+.menu-item.active .checkbox-icon {
+  color: #000;
+  font-weight: 600;
+}
+
+.menu-item.separator {
+  background: rgba(52, 152, 219, 0.2);
+  height: 38px;
+  border-top: 2px solid #3498db;
+  border-bottom: 2px solid #3498db;
+}
+
+.item-text {
+  flex: 1;
+  font-size: 13px;
+  color: #f5f5f5;
+  font-weight: 500;
+}
+
+.separator-text {
+  flex: 1;
+  font-size: 13px;
+  color: #3498db;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.item-arrow,
+.item-info {
+  font-size: 12px;
+  color: #bdc3c7;
+  margin-left: auto;
+}
+
+.item-arrow {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Checkbox Style - RageUI Authentic */
+.checkbox-icon {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #34495e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-left: auto;
+  background: #2c3e50;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
+.menu-item.checkbox[data-checked="true"] .checkbox-icon {
+  background: #27ae60;
+  border-color: #229954;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(39, 174, 96, 0.4);
+}
+
+.menu-item.checkbox[data-checked="false"] .checkbox-icon {
+  background: #34495e;
+  border-color: #5d6d7e;
+  color: #95a5a6;
+}
+
+.menu-item.checkbox[data-checked="false"] .checkbox-icon:after {
+  content: "☐";
+}
+
+.menu-item.checkbox[data-checked="true"] .checkbox-icon:after {
+  content: "☑";
+}
+
+/* List Control Style */
+.list-control {
+  font-size: 12px;
+  color: #bdc3c7;
+  margin-left: auto;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-item.active .list-control {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Navigation */
+.menu-navigation {
+  height: 36px;
+  background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-arrows {
+  font-size: 16px;
+  color: #3498db;
+  font-weight: bold;
+  letter-spacing: 2px;
+  animation: arrowPulse 2s infinite;
+}
+
+@keyframes arrowPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Description */
+.menu-description {
+  min-height: 50px;
+  background: linear-gradient(135deg, #2c3e50, #1a1a1a);
+  border-top: 4px solid #3498db;
+}
+
+.description-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #2980b9, #3498db);
+  animation: progressBar 2s infinite;
+}
+
+@keyframes progressBar {
+  0%,
+  100% {
+    transform: scaleX(0.8);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+}
+
+.description-text {
+  padding: 12px 8px;
+  font-size: 12px;
+  color: #ecf0f1;
+  line-height: 1.4;
+  text-align: justify;
+}
+
+/* Instructions */
+.menu-instructions {
+  background: rgba(0, 0, 0, 0.9);
+  padding: 8px;
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.key-icon {
+  background: #34495e;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ecf0f1;
+  border: 1px solid #5d6d7e;
+}
+
+.key-text {
+  color: #bdc3c7;
+  font-size: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .rageui-menu {
+    width: 90vw;
+  }
+
+  .submenu {
+    left: 0;
+    top: 100%;
+  }
+}
+
+/* Selection effect classes for JavaScript */
+.menu-item.selecting {
+  animation: selectPulse 0.3s ease;
+}
+
+@keyframes selectPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
