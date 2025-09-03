@@ -183,6 +183,12 @@ class RageUIMenuSystem {
             this.menuStack.push(this.currentMenu);
         }
 
+        // Afficher le container
+        let container = document.querySelector('.menu-container');
+        if (container) {
+            container.style.display = 'block';
+        }
+
         this.currentMenu = menuId;
         this.menus[menuId].element.style.display = 'block';
         this.menus[menuId].activeIndex = 0;
@@ -202,6 +208,23 @@ class RageUIMenuSystem {
     closeMenu() {
         if (this.currentMenu) {
             this.menus[this.currentMenu].element.style.display = 'none';
+        }
+
+        // Cacher le container
+        let container = document.querySelector('.menu-container');
+        if (container) {
+            container.style.display = 'none';
+        }
+
+        // Envoyer le signal de fermeture à FiveM
+        if (typeof fetch !== 'undefined') {
+            fetch(`https://RageUI/menuClosed`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8',
+                },
+                body: JSON.stringify({})
+            });
         }
 
         this.currentMenu = null;
@@ -351,6 +374,23 @@ class RageUIMenuSystem {
                 break;
         }
 
+        // Envoyer les données à FiveM via NUI callback
+        if (typeof fetch !== 'undefined') {
+            fetch(`https://RageUI/itemSelected`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8',
+                },
+                body: JSON.stringify({
+                    menuId: menu.id,
+                    activeIndex: menu.activeIndex,
+                    label: item.label,
+                    value: item.value,
+                    type: item.type
+                })
+            });
+        }
+
         // Callback global pour FiveM
         if (this.callbacks.onItemSelected) {
             this.callbacks.onItemSelected(menu.id, menu.activeIndex, item);
@@ -444,73 +484,22 @@ if (typeof window !== 'undefined') {
             case 'closeMenu':
                 RageUI.closeMenu();
                 break;
+            case 'createMenu':
+                RageUI.createMenu(data.menuId, data.title, data.subtitle, data.items);
+                break;
             case 'updateMenu':
                 RageUI.updateMenu(data.menuId, data.items);
+                break;
+            case 'hideAll':
+                // Cacher tous les éléments d'interface
+                RageUI.closeMenu();
+                document.body.style.display = 'block';
                 break;
         }
     });
 }
 
-// Add CSS animations for notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes notificationSlide {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes notificationSlideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-
-    @keyframes menuSlideOut {
-        from {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        to {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-    }
-`;
-document.head.appendChild(style);
-
 // Initialize the menu when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new RageUIMenu();
-});
-
-// Show instructions on load
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        const instructions = document.createElement('div');
-        instructions.innerHTML = `
-            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                        background: rgba(0,0,0,0.9); color: white; padding: 20px; border-radius: 10px;
-                        border: 2px solid #3498db; text-align: center; z-index: 2000; max-width: 400px;">
-                <h3 style="color: #3498db; margin-bottom: 15px;">🎮 RageUI Menu Demo</h3>
-                <p style="margin-bottom: 10px;">Utilisez les <strong>flèches</strong> pour naviguer</p>
-                <p style="margin-bottom: 10px;">Appuyez sur <strong>Entrée</strong> pour sélectionner</p>
-                <p style="margin-bottom: 15px;">Utilisez <strong>Échap</strong> pour revenir en arrière</p>
-                <button onclick="this.parentElement.remove()" 
-                        style="background: #3498db; color: white; border: none; padding: 8px 16px; 
-                               border-radius: 5px; cursor: pointer;">Compris!</button>
-            </div>
-        `;
-        document.body.appendChild(instructions);
-    }, 1000);
+    // RageUI est déjà initialisé ci-dessus
 });

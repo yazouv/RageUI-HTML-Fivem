@@ -16,6 +16,11 @@ local disableControls = false
 ]]
 Citizen.CreateThread(function()
     SetNuiFocus(false, false)
+    SendNUIMessage({
+        action = 'hideAll'
+    })
+    Wait(1000) -- Attendre que l'interface soit chargée
+    print("^2[RageUI] Interface initialisée^0")
 end)
 
 --[[
@@ -187,18 +192,6 @@ Citizen.CreateThread(function()
 end)
 
 --[[
-    Commandes de test (à supprimer en production)
-]]
-RegisterCommand('testmenu', function(source, args)
-    local menuId = args[1] or 'main'
-    RageUIMenu.Open(menuId)
-end, false)
-
-RegisterCommand('closemenu', function()
-    RageUIMenu.Close()
-end, false)
-
---[[
     Exports pour autres ressources
 ]]
 exports('OpenMenu', RageUIMenu.Open)
@@ -207,27 +200,30 @@ exports('CreateMenu', RageUIMenu.CreateMenu)
 exports('UpdateMenu', RageUIMenu.UpdateMenu)
 exports('RegisterMenuCallback', RageUIMenu.RegisterCallback)
 
---[[
-    Events pour la compatibilité
-]]
-RegisterNetEvent('rageui:openMenu')
-AddEventHandler('rageui:openMenu', function(menuId, data)
-    RageUIMenu.Open(menuId, data)
-end)
-
-RegisterNetEvent('rageui:closeMenu')
-AddEventHandler('rageui:closeMenu', function()
-    RageUIMenu.Close()
-end)
-
-RegisterNetEvent('rageui:createMenu')
-AddEventHandler('rageui:createMenu', function(menuId, title, subtitle, items)
-    RageUIMenu.CreateMenu(menuId, title, subtitle, items)
-end)
-
-RegisterNetEvent('rageui:updateMenu')
-AddEventHandler('rageui:updateMenu', function(menuId, items)
-    RageUIMenu.UpdateMenu(menuId, items)
-end)
-
 print("^2[RageUI] Client chargé avec succès^0")
+
+-- Menu de test
+RegisterCommand('testMenu', function()
+    -- Créer le menu avec ses items
+    RageUIMenu.CreateMenu('testMenu', 'Test Menu', 'Ceci est un menu de test', {
+        { label = 'Item 1', value = 'item1' },
+        { label = 'Item 2', value = 'item2' },
+        { label = 'Item 3', value = 'item3' }
+    })
+
+    -- Enregistrer un callback pour gérer les actions du menu
+    RageUIMenu.RegisterCallback('testMenu', function(data)
+        print("^3[RageUI] Item sélectionné: " .. tostring(data.value) .. "^0")
+
+        -- Afficher une notification dans le jeu
+        SetNotificationTextEntry("STRING")
+        AddTextComponentString("Vous avez sélectionné: " .. (data.label or data.value))
+        DrawNotification(false, false)
+
+        -- Fermer le menu après sélection
+        RageUIMenu.Close()
+    end)
+
+    -- Ouvrir le menu immédiatement après l'avoir créé
+    RageUIMenu.Open('testMenu')
+end)
