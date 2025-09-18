@@ -191,6 +191,40 @@ body {
   border-bottom: 2px solid #3498db;
 }
 
+/* Items désactivés */
+.menu-item.disabled {
+  background: rgba(0, 0, 0, 0.5) !important;
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.menu-item.disabled .item-text {
+  color: #666 !important;
+  font-style: italic;
+}
+
+.menu-item.disabled .item-arrow,
+.menu-item.disabled .list-control,
+.menu-item.disabled .checkbox-icon {
+  color: #666 !important;
+  opacity: 0.5;
+}
+
+.menu-item.disabled.active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #666 !important;
+  box-shadow: none !important;
+}
+
+.menu-item.disabled.active .item-text,
+.menu-item.disabled.active .item-arrow,
+.menu-item.disabled.active .list-control,
+.menu-item.disabled.active .checkbox-icon {
+  color: #666 !important;
+  font-weight: normal !important;
+}
+
 .item-text {
   flex: 1;
   font-size: 13px;

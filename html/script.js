@@ -41,12 +41,65 @@ class RageUIMenuSystem {
             subtitle: subtitle,
             items: items,
             activeIndex: 0,
-            element: null
+            element: null,
+            parentMenu: null
         };
 
         this.menus[id] = menu;
         this.createMenuElement(menu);
         return menu;
+    }
+
+    /**
+     * Crée un sous-menu relié à un menu parent
+     * @param {string} id - ID unique du sous-menu
+     * @param {string} parentId - ID du menu parent
+     * @param {string} title - Titre du sous-menu
+     * @param {string} subtitle - Sous-titre (optionnel)
+     * @param {Array} items - Items du sous-menu
+     */
+    createSubMenu(id, parentId, title, subtitle = '', items = []) {
+        const menu = {
+            id: id,
+            title: title,
+            subtitle: subtitle,
+            items: items,
+            activeIndex: 0,
+            element: null,
+            parentMenu: parentId
+        };
+
+        this.menus[id] = menu;
+        this.createMenuElement(menu);
+        return menu;
+    }
+
+    /**
+     * Ouvre un sous-menu spécifique en l'ajoutant à la pile
+     * @param {string} menuId - ID du sous-menu à ouvrir
+     */
+    openSubMenu(menuId) {
+        if (!this.menus[menuId]) {
+            console.error('Menu not found:', menuId);
+            return;
+        }
+
+        // Sauvegarder le menu actuel dans la pile
+        if (this.currentMenu) {
+            this.menuStack.push(this.currentMenu);
+            this.menus[this.currentMenu].element.style.display = 'none';
+        }
+
+        // Ouvrir le nouveau menu
+        this.currentMenu = menuId;
+        this.menus[menuId].element.style.display = 'block';
+        this.updateDescription();
+
+        // Afficher le container
+        let container = document.querySelector('.menu-container');
+        if (container) {
+            container.style.display = 'block';
+        }
     }
 
     createMenuElement(menu) {
@@ -131,8 +184,12 @@ class RageUIMenuSystem {
         if (item.type === 'separator') className += ' separator';
         if (item.type === 'checkbox') className += ' checkbox';
         if (item.type === 'list') className += ' list';
+        if (item.disabled === true) className += ' disabled'; // Ajouter la classe disabled
 
         itemElement.className = className;
+
+        // Stocker l'état disabled dans un attribut data
+        itemElement.dataset.disabled = item.disabled === true ? 'true' : 'false';
 
         switch (item.type) {
             case 'separator':
@@ -293,15 +350,15 @@ class RageUIMenuSystem {
         const menu = this.menus[this.currentMenu];
         let newIndex = menu.activeIndex - 1;
 
-        // Skip separators
-        while (newIndex >= 0 && menu.items[newIndex].type === 'separator') {
+        // Skip separators and disabled items
+        while (newIndex >= 0 && (menu.items[newIndex].type === 'separator' || menu.items[newIndex].disabled === true)) {
             newIndex--;
         }
 
         if (newIndex < 0) {
-            // Go to last non-separator item
+            // Go to last non-separator and non-disabled item
             newIndex = menu.items.length - 1;
-            while (newIndex >= 0 && menu.items[newIndex].type === 'separator') {
+            while (newIndex >= 0 && (menu.items[newIndex].type === 'separator' || menu.items[newIndex].disabled === true)) {
                 newIndex--;
             }
         }
@@ -317,15 +374,15 @@ class RageUIMenuSystem {
         const menu = this.menus[this.currentMenu];
         let newIndex = menu.activeIndex + 1;
 
-        // Skip separators
-        while (newIndex < menu.items.length && menu.items[newIndex].type === 'separator') {
+        // Skip separators and disabled items
+        while (newIndex < menu.items.length && (menu.items[newIndex].type === 'separator' || menu.items[newIndex].disabled === true)) {
             newIndex++;
         }
 
         if (newIndex >= menu.items.length) {
-            // Go to first non-separator item
+            // Go to first non-separator and non-disabled item
             newIndex = 0;
-            while (newIndex < menu.items.length && menu.items[newIndex].type === 'separator') {
+            while (newIndex < menu.items.length && (menu.items[newIndex].type === 'separator' || menu.items[newIndex].disabled === true)) {
                 newIndex++;
             }
         }
@@ -343,6 +400,11 @@ class RageUIMenuSystem {
 
         if (!item) return;
 
+        // Bloquer l'interaction si l'item est disabled
+        if (item.disabled === true) {
+            return; // Ne rien faire si l'item est désactivé
+        }
+
         // Animation de sélection
         const itemElement = menu.element.querySelectorAll('.menu-item')[menu.activeIndex];
         itemElement.classList.add('selecting');
@@ -354,23 +416,15 @@ class RageUIMenuSystem {
             case 'checkbox':
                 item.checked = !item.checked;
                 this.updateMenuItems(menu);
-                if (item.onchange) {
-                    item.onchange(item.checked);
-                }
                 break;
 
             case 'button':
                 if (item.submenu) {
-                    this.openMenu(item.submenu);
-                } else if (item.onclick) {
-                    item.onclick();
+                    this.openSubMenu(item.submenu);
                 }
                 break;
 
             default:
-                if (item.onclick) {
-                    item.onclick();
-                }
                 break;
         }
 
@@ -383,6 +437,7 @@ class RageUIMenuSystem {
                 },
                 body: JSON.stringify({
                     menuId: menu.id,
+                    id: item.id,
                     activeIndex: menu.activeIndex,
                     label: item.label,
                     value: item.value,
@@ -401,15 +456,27 @@ class RageUIMenuSystem {
         const menu = this.menus[this.currentMenu];
         const item = menu.items[menu.activeIndex];
 
-        if (item && item.type === 'list') {
+        if (item && item.type === 'list' && item.disabled !== true) {
             let newIndex = (item.index || 0) - 1;
             if (newIndex < 0) newIndex = item.values.length - 1;
 
             item.index = newIndex;
             this.updateMenuItems(menu);
 
-            if (item.onchange) {
-                item.onchange(newIndex, item.values[newIndex]);
+            // Envoyer l'événement à FiveM via NUI callback
+            if (typeof fetch !== 'undefined') {
+                fetch(`https://RageUI/listChanged`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                    },
+                    body: JSON.stringify({
+                        menuId: menu.id,
+                        itemId: item.id,
+                        newIndex: newIndex,
+                        newValue: item.values[newIndex]
+                    })
+                });
             }
         }
     }
@@ -418,15 +485,27 @@ class RageUIMenuSystem {
         const menu = this.menus[this.currentMenu];
         const item = menu.items[menu.activeIndex];
 
-        if (item && item.type === 'list') {
+        if (item && item.type === 'list' && item.disabled !== true) {
             let newIndex = (item.index || 0) + 1;
             if (newIndex >= item.values.length) newIndex = 0;
 
             item.index = newIndex;
             this.updateMenuItems(menu);
 
-            if (item.onchange) {
-                item.onchange(newIndex, item.values[newIndex]);
+            // Envoyer l'événement à FiveM via NUI callback
+            if (typeof fetch !== 'undefined') {
+                fetch(`https://RageUI/listChanged`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                    },
+                    body: JSON.stringify({
+                        menuId: menu.id,
+                        itemId: item.id,
+                        newIndex: newIndex,
+                        newValue: item.values[newIndex]
+                    })
+                });
             }
         }
     }
@@ -487,6 +566,12 @@ if (typeof window !== 'undefined') {
             case 'createMenu':
                 RageUI.createMenu(data.menuId, data.title, data.subtitle, data.items);
                 break;
+            case 'createSubMenu':
+                RageUI.createSubMenu(data.menuId, data.parentMenuId, data.title, data.subtitle, data.items);
+                break;
+            case 'openSubMenu':
+                RageUI.openSubMenu(data.menuId);
+                break;
             case 'updateMenu':
                 RageUI.updateMenu(data.menuId, data.items);
                 break;
@@ -498,8 +583,3 @@ if (typeof window !== 'undefined') {
         }
     });
 }
-
-// Initialize the menu when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    // RageUI est déjà initialisé ci-dessus
-});

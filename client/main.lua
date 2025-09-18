@@ -19,8 +19,7 @@ Citizen.CreateThread(function()
     SendNUIMessage({
         action = 'hideAll'
     })
-    Wait(1000) -- Attendre que l'interface soit chargée
-    print("^2[RageUI] Interface initialisée^0")
+    Wait(1000)
 end)
 
 --[[
@@ -30,7 +29,6 @@ end)
 ]]
 function RageUIMenu.Open(menuId, data)
     if not menuId then
-        print("^1[RageUI] Erreur: menuId requis pour ouvrir un menu^0")
         return
     end
 
@@ -47,8 +45,6 @@ function RageUIMenu.Open(menuId, data)
         menuId = menuId,
         data = data or {}
     })
-
-    print("^2[RageUI] Menu ouvert: " .. menuId .. "^0")
 end
 
 --[[
@@ -70,8 +66,6 @@ function RageUIMenu.Close()
     SendNUIMessage({
         action = 'closeMenu'
     })
-
-    print("^2[RageUI] Menu fermé^0")
 end
 
 --[[
@@ -83,7 +77,6 @@ end
 ]]
 function RageUIMenu.CreateMenu(menuId, title, subtitle, items)
     if not menuId or not title then
-        print("^1[RageUI] Erreur: menuId et title requis^0")
         return
     end
 
@@ -94,8 +87,44 @@ function RageUIMenu.CreateMenu(menuId, title, subtitle, items)
         subtitle = subtitle or '',
         items = items or {}
     })
+end
 
-    print("^2[RageUI] Menu créé: " .. menuId .. "^0")
+--[[
+    Crée un sous-menu relié à un menu parent
+    @param menuId string - ID unique du sous-menu
+    @param parentMenuId string - ID du menu parent
+    @param title string - Titre du sous-menu
+    @param subtitle string - Sous-titre (optionnel)
+    @param items table - Liste des items du sous-menu
+]]
+function RageUIMenu.CreateSubMenu(menuId, parentMenuId, title, subtitle, items)
+    if not menuId or not parentMenuId or not title then
+        return
+    end
+
+    SendNUIMessage({
+        action = 'createSubMenu',
+        menuId = menuId,
+        parentMenuId = parentMenuId,
+        title = title,
+        subtitle = subtitle or '',
+        items = items or {}
+    })
+end
+
+--[[
+    Ouvre un sous-menu spécifique
+    @param menuId string - ID du sous-menu à ouvrir
+]]
+function RageUIMenu.OpenSubMenu(menuId)
+    if not menuId then
+        return
+    end
+
+    SendNUIMessage({
+        action = 'openSubMenu',
+        menuId = menuId
+    })
 end
 
 --[[
@@ -105,7 +134,6 @@ end
 ]]
 function RageUIMenu.UpdateMenu(menuId, items)
     if not menuId then
-        print("^1[RageUI] Erreur: menuId requis^0")
         return
     end
 
@@ -122,18 +150,31 @@ end
     @param callback function - Fonction de callback
 ]]
 function RageUIMenu.RegisterCallback(menuId, callback)
-    if not menuId or type(callback) ~= 'function' then
-        print("^1[RageUI] Erreur: menuId et callback valide requis^0")
-        return
-    end
-
+    print("Registering callback for menu:", menuId)
     menuCallbacks[menuId] = callback
-    print("^2[RageUI] Callback enregistré pour: " .. menuId .. "^0")
+end
+
+--[[
+    Supprime un callback pour un menu
+    @param menuId string - ID du menu
+]]
+function RageUIMenu.UnregisterCallback(menuId)
+    print("Unregistering callback for menu:", menuId)
+    menuCallbacks[menuId] = nil
 end
 
 --[[
     Gestion des messages NUI
 ]]
+
+exports('GetCurrentMenu', function()
+    return currentMenu
+end)
+
+exports('IsMenuOpen', function()
+    return currentMenu ~= nil
+end)
+
 RegisterNUICallback('menuClosed', function(data, cb)
     RageUIMenu.Close()
     cb('ok')
@@ -147,6 +188,12 @@ RegisterNUICallback('itemSelected', function(data, cb)
     -- Trigger un événement pour les autres ressources
     TriggerEvent('rageui:itemSelected', currentMenu, data)
 
+    cb('ok')
+end)
+
+RegisterNUICallback('listChanged', function(data, cb)
+    -- Trigger un événement pour les autres ressources
+    TriggerEvent('rageui:listChanged', data.menuId, data.itemId, data.newIndex, data.newValue)
     cb('ok')
 end)
 
@@ -197,33 +244,8 @@ end)
 exports('OpenMenu', RageUIMenu.Open)
 exports('CloseMenu', RageUIMenu.Close)
 exports('CreateMenu', RageUIMenu.CreateMenu)
+exports('CreateSubMenu', RageUIMenu.CreateSubMenu)
+exports('OpenSubMenu', RageUIMenu.OpenSubMenu)
 exports('UpdateMenu', RageUIMenu.UpdateMenu)
 exports('RegisterMenuCallback', RageUIMenu.RegisterCallback)
-
-print("^2[RageUI] Client chargé avec succès^0")
-
--- Menu de test
-RegisterCommand('testMenu', function()
-    -- Créer le menu avec ses items
-    RageUIMenu.CreateMenu('testMenu', 'Test Menu', 'Ceci est un menu de test', {
-        { label = 'Item 1', value = 'item1' },
-        { label = 'Item 2', value = 'item2' },
-        { label = 'Item 3', value = 'item3' }
-    })
-
-    -- Enregistrer un callback pour gérer les actions du menu
-    RageUIMenu.RegisterCallback('testMenu', function(data)
-        print("^3[RageUI] Item sélectionné: " .. tostring(data.value) .. "^0")
-
-        -- Afficher une notification dans le jeu
-        SetNotificationTextEntry("STRING")
-        AddTextComponentString("Vous avez sélectionné: " .. (data.label or data.value))
-        DrawNotification(false, false)
-
-        -- Fermer le menu après sélection
-        RageUIMenu.Close()
-    end)
-
-    -- Ouvrir le menu immédiatement après l'avoir créé
-    RageUIMenu.Open('testMenu')
-end)
+exports('UnregisterMenuCallback', RageUIMenu.UnregisterCallback)
